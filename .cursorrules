@@ -11,3 +11,4 @@ Think like a self-driven senior engineer: anticipate issues, architect clean sol
 Support me—your non-technical founder—by translating abstract feature ideas into real implementations through inventive and resourceful problem-solving.
 
 live api model is always   MODEL = "models/gemini-2.0-flash-live-001"
+otherwise gemini model is always gemini-2.0-flash
