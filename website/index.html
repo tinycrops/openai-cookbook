@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Information System Diagram</title>
+    <!-- Mermaid.js for diagram rendering -->
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose'
+      });
+      document.addEventListener('DOMContentLoaded', () => {
+        const graphDefinition = `
+          graph LR
+            Demo["demo.py (Demo Script)"]
+            Recorder["SignalRecorder Class"]
+            subgraph Recorder Methods
+              CT["create_table_if_not_exists()"]
+              RS["record_signal(name, value, metadata)"]
+              FS["fetch_signals(name, limit)"]
+              CL["close()"]
+            end
+            Demo -->|imports| Recorder
+            Recorder --> CT
+            Demo --> RS
+            RS --> DB["signals.db SQLite Database"]
+            Demo --> FS
+            FS --> DB
+            Demo --> CL
+            DB --> Table["signals (id, timestamp, name, value, metadata)"]
+        `;
+        mermaid.mermaidAPI.render('diagramSVG', graphDefinition, (svgCode) => {
+          document.getElementById('diagramContainer').innerHTML = svgCode;
+        });
+      });
+    </script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; background-color: #f9f9f9; }
+        h1 { color: #333; }
+        .diagram { background: white; padding: 1rem; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .description { margin-bottom: 1.5rem; color: #555; }
+        .details { margin-top: 2rem; color: #333; }
+        .details h2 { color: #222; }
+        .details h3 { color: #444; margin-top: 1rem; }
+        .details p, .details ul { margin-left: 1em; }
+    </style>
+</head>
+<body>
+    <h1>Agentic Information System: Signal Recording Flow</h1>
+    <p class="description">
+        This diagram illustrates how <code>demo.py</code> interacts with <code>SignalRecorder</code> to
+        record and fetch signals in <code>signals.db</code>.
+    </p>
+    <div class="diagram">
+      <div id="diagramContainer"></div>
+    </div>
+    <section class="details">
+      <h2>Detailed Explanation</h2>
+      <p>Below is a step-by-step walkthrough of how the demo script and <code>SignalRecorder</code> work together:</p>
+      <h3>1. demo.py (Demo Script)</h3>
+      <ul>
+        <li>Imports <code>SignalRecorder</code> from <code>signal_recorder.py</code>.</li>
+        <li>Creates an instance of <code>SignalRecorder</code>, which sets up the SQLite database and table.</li>
+        <li>Calls <code>record_signal</code> to log example metrics (e.g., <code>channel_capacity</code>, <code>episode_reward</code>).</li>
+        <li>Fetches recent records with <code>fetch_signals(limit=10)</code> and prints them.</li>
+        <li>Closes the database connection with <code>close()</code>.</li>
+      </ul>
+      <h3>2. SignalRecorder Initialization (<code>__init__</code>)</h3>
+      <ul>
+        <li>Connects to the SQLite database file (default <code>signals.db</code>), with thread-safe configuration.</li>
+        <li>Creates a table named <code>signals</code> if it does not already exist, with columns:</li>
+        <ul>
+          <li><code>id</code> (auto-increment primary key)</li>
+          <li><code>timestamp</code> (ISO8601 UTC timestamp)</li>
+          <li><code>signal_name</code> (text)</li>
+          <li><code>signal_value</code> (numeric, e.g., floats)</li>
+          <li><code>metadata</code> (JSON-encoded text for additional context)</li>
+        </ul>
+      </ul>
+      <h3>3. record_signal(name, value, metadata)</h3>
+      <ul>
+        <li>Generates a current UTC timestamp (ISO format, suffixed with 'Z').</li>
+        <li>Serializes the <code>metadata</code> dictionary to JSON if provided.</li>
+        <li>Inserts a new row into the <code>signals</code> table with a thread lock to ensure safety.</li>
+        <li>Commits the transaction immediately to persist the data.</li>
+      </ul>
+      <h3>4. fetch_signals(name=None, limit=100)</h3>
+      <ul>
+        <li>Constructs a SQL query to select up to <code>limit</code> recent records, optionally filtered by <code>signal_name</code>.</li>
+        <li>Executes the query under the same thread lock.</li>
+        <li>Parses the JSON metadata back into Python dictionaries.</li>
+        <li>Returns a list of dictionaries, each containing <code>id</code>, <code>timestamp</code>, <code>signal_name</code>, <code>signal_value</code>, and <code>metadata</code>.</li>
+      </ul>
+      <h3>5. close()</h3>
+      <p>Closes the SQLite connection cleanly under lock. Always call this when done recording.</p>
+      <h3>Database Schema</h3>
+      <pre><code>CREATE TABLE signals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  timestamp TEXT NOT NULL,
+  signal_name TEXT NOT NULL,
+  signal_value REAL,
+  metadata TEXT
+);</code></pre>
+    </section>
+</body>
+</html>
